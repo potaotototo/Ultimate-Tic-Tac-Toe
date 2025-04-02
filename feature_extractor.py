@@ -1,10 +1,4 @@
-# Re-run the previous cell since the code environment was reset
-
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression, HuberRegressor
-from sklearn.metrics import mean_absolute_error
-from utils import load_data
 
 class FeatureExtractor:
     def extract_features(self, state):
@@ -148,57 +142,3 @@ class FeatureExtractor:
         if diag2.count(fill) == 2 and diag2.count(0) == 1:
             return True
         return False
-
-# Load data and extract features
-data = load_data()
-extractor = FeatureExtractor()
-
-X = []
-y = []
-
-for state, utility in data:
-    if state.is_terminal():
-        continue
-    features = extractor.extract_features(state)
-    X.append(features)
-    y.append(utility)
-
-X = np.array(X)
-y = np.array(y)
-
-# Use Huber Loss
-model = HuberRegressor()
-model.fit(X, y)
-
-# Output learned weights
-weights = model.coef_
-intercept = model.intercept_
-print(f"Learned weights: {weights.round(4)}, intercept: {intercept:.4f}")
-
-# Predict and plot
-y_pred = model.predict(X)
-
-mae = mean_absolute_error(y, y_pred)
-print(f"Mean Absolute Error: {mae:.4f}")
-
-feature_names = [
-    "Board win diff",
-    "Valid actions",
-    "Tied boards",
-    "Partial boards",
-    "Global contrib",
-    "Win in 1",
-    "Leading boards",
-    "Active local boards",
-    "2-in-a-line global"
-]
-
-plt.figure(figsize=(10, 6))
-plt.scatter(y, y_pred, alpha=0.1, s=5)
-plt.plot([-1, 1], [-1, 1], color='red', linestyle='--', linewidth=1)
-# plt.barh(feature_names, model.coef_)
-plt.xlabel("True Utility (scaled to [-1, 1])")
-plt.ylabel("Predicted Heuristic (linear model)")
-plt.title("Regression Heuristic vs True Utility")
-plt.grid(True)
-plt.show()
