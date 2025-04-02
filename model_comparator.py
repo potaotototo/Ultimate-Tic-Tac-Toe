@@ -38,7 +38,7 @@ results = {}
 # Train and evaluate each model
 for name, model in models.items():
     model.fit(X, y)
-    y_pred = model.predict(X)
+    y_pred = np.clip(model.predict(X), -1, 1)
     mae = mean_absolute_error(y, y_pred)
     mse = mean_squared_error(y, y_pred)
     results[name] = {"model": model, "mae": mae, "mse": mse, "pred": y_pred}

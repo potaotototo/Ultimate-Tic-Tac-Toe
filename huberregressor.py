@@ -1,0 +1,43 @@
+import numpy as np
+from sklearn.linear_model import HuberRegressor
+from utils import load_data
+from feature_extractor import FeatureExtractor
+
+# Load data and extract features
+data = load_data()
+extractor = FeatureExtractor()
+
+X, y = [], []
+for state, utility in data:
+    if state.is_terminal():
+        continue
+    X.append(extractor.extract_features(state))
+    y.append(utility) 
+
+X = np.array(X)
+y = np.array(y)
+
+# Fit Huber Regressor
+model = HuberRegressor()
+model.fit(X, y)
+
+weights = model.coef_
+intercept = model.intercept_
+
+# Feature names
+feature_names = [
+    "Board win diff",
+    "Valid actions",
+    "Global contrib",
+    "Win in 1",
+    "Opponent win in 1",
+    "Available boards",
+    "Filled ratio",
+    "2-in-a-line",
+    "Opp 2-in-a-line"
+]
+
+print("Huber Regressor Weights:")
+for name, w in zip(feature_names, weights):
+    print(f"{name:25s}: {w:+.4f}")
+print(f"Intercept (bias term): {intercept:+.4f}")

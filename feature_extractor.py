@@ -2,7 +2,7 @@ import numpy as np
 
 class FeatureExtractor:
     def extract_features(self, state):
-        num_features = 7
+        num_features = 9
 
         if state.is_terminal():
             return np.zeros(num_features)
@@ -60,6 +60,9 @@ class FeatureExtractor:
         # Feature 12: Available sub-boards (normalized)
         available_boards = np.sum(lbs == 0) / 9
 
+        # Feature 13: Number of filled cells
+        filled_ratio = np.sum(state.board != 0) / 81 / 9
+
         # Feature 13: Consider 2 in a line
         win_lines = [
             [(0, 0), (0, 1), (0, 2)],
@@ -71,11 +74,13 @@ class FeatureExtractor:
             [(0, 0), (1, 1), (2, 2)],
             [(0, 2), (1, 1), (2, 0)],
         ]
-        control_2_in_line = 0
+        control_2_in_line, opp_2_in_line = 0, 0
         for line in win_lines:
             cells = [lbs[i][j] for i, j in line]
             if cells.count(my_fill) == 2 and cells.count(0) == 1:
                 control_2_in_line += 1
+            if cells.count(opp_fill) == 2 and cells.count(0) == 1:
+                opp_2_in_line += 1
 
         features = np.array([
             my_won - opp_won,
@@ -84,7 +89,9 @@ class FeatureExtractor:
             win_in_one,
             opp_win_in_one,
             available_boards,
-            control_2_in_line
+            control_2_in_line,
+            opp_2_in_line,
+            filled_ratio
         ])
 
         return features
