@@ -3,12 +3,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression, HuberRegressor
+from sklearn.metrics import mean_absolute_error
 from utils import load_data
 
 class FeatureExtractor:
     def extract_features(self, state):
+        num_features = 10
+
         if state.is_terminal():
-            return np.zeros(8)
+            return np.zeros(num_features)
 
         lbs = state.local_board_status
         board = state.board
@@ -19,27 +22,14 @@ class FeatureExtractor:
         my_won = np.sum(lbs == my_fill)
         opp_won = np.sum(lbs == opp_fill)
 
-        # Feature 3: Local threats
-        local_threats = 0
-        for i in range(3):
-            for j in range(3):
-                if lbs[i][j] != 0:
-                    continue
-                local_threats += self.quick_local_threat(board[i][j], my_fill)
-                local_threats -= self.quick_local_threat(board[i][j], opp_fill)
+        # Feature 2: Centre priority (removed)
+
+        # Feature 3: Local threats (removed)
 
         # Feature 4: Number of valid actions (normalized)
         num_valid_actions = len(state.get_all_valid_actions()) / 81
 
-        # Feature 5: Opponent forced into a bad board
-        next_i, next_j = state.prev_local_action if state.prev_local_action else (None, None)
-        opp_forced_bad_board = 0
-        if next_i is not None:
-            next_status = lbs[next_i][next_j]
-            if next_status == 0:
-                next_board = board[next_i][next_j]
-                if np.count_nonzero(next_board) >= 7:
-                    opp_forced_bad_board = 1
+        # Feature 5: Opponent forced into a bad board (removed)
 
         # Feature 6: Number of tied boards (normalized)
         num_tied = np.sum(lbs == 3) / 9
@@ -63,22 +53,67 @@ class FeatureExtractor:
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
         # Feature 9: Can win a local board in one move
+        # Feature 10: Opponent can win a local board in one move
         win_in_one = 0
+        opp_win_in_one = 0
+
         for i in range(3):
             for j in range(3):
-                if lbs[i][j] == 0 and self.has_local_win_in_one(board[i][j], my_fill):
+                if lbs[i][j] != 0:
+                    continue
+                local = board[i][j]
+                if self.has_local_win_in_one(local, my_fill):
                     win_in_one += 1
-        win_in_one = win_in_one / 9  # normalize
+                if self.has_local_win_in_one(local, opp_fill):
+                    opp_win_in_one += 1
+
+        win_in_one /= 9
+        opp_win_in_one /= 9
+
+        # Feature 11: Boards where you’re ahead (normalized)
+        leading_boards = 0
+        for i in range(3):
+            for j in range(3):
+                if lbs[i][j] != 0:
+                    continue
+                local = board[i][j]
+                my_count = np.sum(local == my_fill)
+                opp_count = np.sum(local == opp_fill)
+                if my_count > opp_count:
+                    leading_boards += 1
+        leading_boards /= 9  
+
+        # Feature 12: Available sub-boards (normalized)
+        available_boards = np.sum(lbs == 0) / 9
+
+        # Feature 13: Consider 2 in a line
+        win_lines = [
+            [(0, 0), (0, 1), (0, 2)],
+            [(1, 0), (1, 1), (1, 2)],
+            [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)],
+            [(0, 1), (1, 1), (2, 1)],
+            [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)],
+            [(0, 2), (1, 1), (2, 0)],
+        ]
+        control_2_in_line = 0
+        for line in win_lines:
+            cells = [lbs[i][j] for i, j in line]
+            if cells.count(my_fill) == 2 and cells.count(0) == 1:
+                control_2_in_line += 1
 
         return np.array([
             my_won - opp_won,
-            local_threats,
             num_valid_actions,
-            opp_forced_bad_board,
             num_tied,
             partial_boards,
             global_contrib,
-            win_in_one
+            win_in_one,
+            opp_win_in_one,
+            leading_boards,
+            available_boards,
+            control_2_in_line
         ])
 
     def quick_local_threat(self, sub_board, fill):
@@ -142,11 +177,28 @@ print(f"Learned weights: {weights.round(4)}, intercept: {intercept:.4f}")
 
 # Predict and plot
 y_pred = model.predict(X)
-plt.figure(figsize=(8, 6))
+
+mae = mean_absolute_error(y, y_pred)
+print(f"Mean Absolute Error: {mae:.4f}")
+
+feature_names = [
+    "Board win diff",
+    "Valid actions",
+    "Tied boards",
+    "Partial boards",
+    "Global contrib",
+    "Win in 1",
+    "Leading boards",
+    "Active local boards",
+    "2-in-a-line global"
+]
+
+plt.figure(figsize=(10, 6))
 plt.scatter(y, y_pred, alpha=0.1, s=5)
 plt.plot([-1, 1], [-1, 1], color='red', linestyle='--', linewidth=1)
+# plt.barh(feature_names, model.coef_)
 plt.xlabel("True Utility (scaled to [-1, 1])")
 plt.ylabel("Predicted Heuristic (linear model)")
-plt.title("Regression Heuristic vs True Utility (8 features)")
+plt.title("Regression Heuristic vs True Utility")
 plt.grid(True)
 plt.show()
