@@ -82,6 +82,20 @@ def train_model(features, utilities, epochs=1000, lr=0.001, patience=200):
 
     return model
 
+def save_weights(model, filename="model_weights.npz"):
+    weights = {
+        "fc1_weight": model.fc1.weight.detach().numpy(),
+        "fc1_bias": model.fc1.bias.detach().numpy(),
+        "fc2_weight": model.fc2.weight.detach().numpy(),
+        "fc2_bias": model.fc2.bias.detach().numpy(),
+        "fc3_weight": model.fc3.weight.detach().numpy(),
+        "fc3_bias": model.fc3.bias.detach().numpy(),
+        "fc4_weight": model.fc4.weight.detach().numpy(),
+        "fc4_bias": model.fc4.bias.detach().numpy(),
+    }
+    np.savez_compressed(filename, **weights)
+    print(f"Weights saved to {filename}")
+
 if __name__ == "__main__":
     data = load_data()
     boards = np.array([state.board for state, utility in data])
@@ -90,3 +104,4 @@ if __name__ == "__main__":
 
     features = extract_features_numpy(boards, current_players)
     model = train_model(features, utilities)
+    save_weights(model)
