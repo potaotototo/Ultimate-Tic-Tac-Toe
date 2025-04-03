@@ -2,10 +2,10 @@ import numpy as np
 
 class FeatureExtractor:
     def extract_features(self, state):
-        num_features = 7
+        # num_features = 9
 
         if state.is_terminal():
-            return np.zeros(num_features)
+            return np.array([state.terminal_utility()])
 
         lbs = state.local_board_status
         board = state.board
@@ -16,7 +16,12 @@ class FeatureExtractor:
         my_won = np.sum(lbs == my_fill)
         opp_won = np.sum(lbs == opp_fill)
 
-        # Feature 2: Centre priority (removed)
+        # Feature 2: Centre priority (revived)
+        center_control = 0
+        if board[1][1][1, 1] == my_fill:  
+            center_control = 1
+        elif board[1][1][1, 1] == opp_fill:  
+            center_control = -1
 
         # Feature 3: Local threats (removed)
 
@@ -61,22 +66,7 @@ class FeatureExtractor:
         # Feature 13: Number of filled cells
         filled_ratio = np.sum(state.board != 0) / 81 / 9
 
-        # Feature 13: Consider 2 in a line
-        win_lines = [
-            [(0, 0), (0, 1), (0, 2)],
-            [(1, 0), (1, 1), (1, 2)],
-            [(2, 0), (2, 1), (2, 2)],
-            [(0, 0), (1, 0), (2, 0)],
-            [(0, 1), (1, 1), (2, 1)],
-            [(0, 2), (1, 2), (2, 2)],
-            [(0, 0), (1, 1), (2, 2)],
-            [(0, 2), (1, 1), (2, 0)],
-        ]
-        control_2_in_line = 0
-        for line in win_lines:
-            cells = [lbs[i][j] for i, j in line]
-            if cells.count(my_fill) == 2 and cells.count(0) == 1:
-                control_2_in_line += 1
+        # Feature 13: Consider 2 in a line (removed)
 
         # Feature 14: Freedom of next move
         freedom = 0.0
@@ -85,15 +75,29 @@ class FeatureExtractor:
             if state.local_board_status[i][j] != 0:
                 freedom = 1.0
 
+        # Feature 15: Track if the opponent is about to win local board
+        blocking_opportunities = 0
+        for i in range(3):
+            for j in range(3):
+                if lbs[i][j] == 0:  # Empty spot
+                    local_board = board[i][j]
+                    if self.has_local_win_in_one(local_board, opp_fill):
+                        blocking_opportunities += 1
+        blocking_opportunities /= 9
+
+        # Feature 16: Prioritise player turn
+        player_turn_advantage = 0.1 if state.fill_num % 2 == 0 else -0.1
 
         features = np.array([
             my_won - opp_won,
+            center_control,
             global_contrib,
             win_in_one,
             opp_win_in_one,
-            control_2_in_line,
             filled_ratio,
-            freedom
+            freedom,
+            blocking_opportunities,
+            player_turn_advantage
         ])
 
         return features

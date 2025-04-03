@@ -26,13 +26,15 @@ intercept = model.intercept_
 # Feature names
 feature_names = [
     "Board win diff",
+    "Central board"
     "Valid actions",
     "Global contrib",
     "Win in 1",
     "Opponent win in 1",
     "Filled ratio",
-    "2-in-a-line",
-    "Freedom move"
+    "Freedom move",
+    "Blocking",
+    "Player turn"
 ]
 
 print("Linear Regression Weights:")

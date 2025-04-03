@@ -35,13 +35,15 @@ lasso_mse = mean_squared_error(y, lasso_pred)
 
 feature_names = [
     "Board win diff",
+    "Central board"
     "Valid actions",
     "Global contrib",
     "Win in 1",
     "Opponent win in 1",
     "Filled ratio",
-    "2-in-a-line",
-    "Freedom move"
+    "Freedom move",
+    "Blocking",
+    "Player turn"
 ]
 
 print(f"Ridge MAE: {ridge_mae:.4f}, MSE: {ridge_mse:.4f}")
