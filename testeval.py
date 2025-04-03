@@ -91,7 +91,7 @@ class StudentAgent:
             weights = np.array([
                 +0.0800,
                 +0.0448,
-                +0.1467,
+                +0.1067,
                 +1.1254,
                 -0.5692,
                 +0.0229,
@@ -197,6 +197,6 @@ class TestEval:
         plt.show()
 
 # Run the test
-agent = StudentAgent(model="lasso")  
+agent = StudentAgent(model="huber")  
 tester = TestEval(agent)
 tester.evaluate_heuristic_accuracy()
