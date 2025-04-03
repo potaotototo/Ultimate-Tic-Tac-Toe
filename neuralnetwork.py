@@ -30,14 +30,14 @@ class TicTacToeNN(nn.Module):
         x = torch.relu(self.fc3(x))
         return self.fc4(x)
 
-def train_model(features, utilities, epochs=1500, lr=0.001, patience=200):
+def train_model(features, utilities, epochs=1000, lr=0.001, patience=200):
     model = TicTacToeNN()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)  # L2 regularization
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
 
     X = torch.tensor(features, dtype=torch.float32)
     y = torch.tensor(utilities, dtype=torch.float32).view(-1, 1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=41)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=66)
 
     best_loss = float('inf')
     best_model = None
@@ -59,8 +59,7 @@ def train_model(features, utilities, epochs=1500, lr=0.001, patience=200):
         if epoch % 100 == 0:
             print(f"Epoch [{epoch}/{epochs}], Train Loss: {loss.item():.4f}, Test Loss: {test_loss.item():.4f}")
 
-        # Early stopping check
-        if test_loss.item() < best_loss - 1e-4:
+        if test_loss.item() < best_loss - 2e-5:
             best_loss = test_loss.item()
             best_model = model.state_dict()
             no_improve_count = 0
@@ -74,6 +73,13 @@ def train_model(features, utilities, epochs=1500, lr=0.001, patience=200):
         model.load_state_dict(best_model)
 
     print("Model trained!")
+
+    # Dump trained weights for hardcoding
+    print("\n# ==== Weights and Biases ====")
+    for name, param in model.named_parameters():
+        array = param.detach().numpy()
+        print(f"{name.replace('.', '_')} = np.{repr(array)}\n")
+
     return model
 
 if __name__ == "__main__":
