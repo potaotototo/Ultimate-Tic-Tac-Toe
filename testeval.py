@@ -123,9 +123,7 @@ class StudentAgent:
             return True
         return False
 
-# Define a StudentAgent with softly tuned linear regression weights
-
-class SoftTunedStudentAgent:
+class LassoSlimStudentAgent:
     def evaluate(self, state):
         if state.is_terminal():
             return state.terminal_utility()
@@ -135,12 +133,16 @@ class SoftTunedStudentAgent:
         my_fill = 1
         opp_fill = 2
 
+        # Selected features
         my_won = np.sum(lbs == my_fill)
         opp_won = np.sum(lbs == opp_fill)
         board_win_diff = my_won - opp_won
 
-        valid_actions = len(state.get_all_valid_actions()) / 81
-        global_weights = np.array([[2, 1, 2], [1, 3, 1], [2, 1, 2]])
+        global_weights = np.array([
+            [2, 1, 2],
+            [1, 3, 1],
+            [2, 1, 2]
+        ])
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
         win_in_one = 0
@@ -157,7 +159,6 @@ class SoftTunedStudentAgent:
         win_in_one /= 9
         opp_win_in_one /= 9
 
-        available_boards = np.sum(lbs == 0) / 9
         filled_ratio = np.sum(state.board != 0) / 729
 
         win_lines = [
@@ -171,39 +172,30 @@ class SoftTunedStudentAgent:
             [(0, 2), (1, 1), (2, 0)],
         ]
         two_in_line = 0
-        opp_two_in_line = 0
         for line in win_lines:
             cells = [lbs[i][j] for i, j in line]
             if cells.count(my_fill) == 2 and cells.count(0) == 1:
                 two_in_line += 1
-            if cells.count(opp_fill) == 2 and cells.count(0) == 1:
-                opp_two_in_line += 1
 
+        # Lasso-selected features and weights
         features = np.array([
             board_win_diff,
-            valid_actions,
             global_contrib,
             win_in_one,
             opp_win_in_one,
-            available_boards,
             filled_ratio,
-            two_in_line,
-            opp_two_in_line
+            two_in_line
         ])
 
-        # Soft-tuned weights
         weights = np.array([
-            +0.0333,  # board_win_diff
-            +0.0191,  # valid_actions
-            +0.09,    # global_contrib (↑)
-            +0.9999,  # win_in_1
-            -0.9955,  # opp_win_in_1
-            -0.0162,  # available_boards
-            +0.20,    # filled_ratio (↑)
-            -0.1737,  # two_in_line
-            -0.29     # opp_two_in_line (↓ slightly)
+            +0.0397,   # board_win_diff
+            +0.1920,   # global_contrib
+            +0.9511,   # win_in_1
+            -0.9912,   # opp_win_in_1
+            +0.1723,   # filled_ratio
+            +0.05    # two_in_line
         ])
-        intercept = 0.08  # soft bump up
+        intercept = 0.0034
 
         return float(np.dot(weights, features) + intercept)
 
@@ -255,6 +247,6 @@ class TestEval:
         plt.show()
 
 # agent = StudentAgent(model="linear")
-agent = SoftTunedStudentAgent()
+agent = LassoSlimStudentAgent()
 tester = TestEval(agent)
 tester.evaluate_heuristic_accuracy()
