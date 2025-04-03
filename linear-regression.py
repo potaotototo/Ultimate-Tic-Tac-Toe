@@ -17,7 +17,6 @@ for state, utility in data:
 X = np.array(X)
 y = np.array(y)
 
-# Fit Huber Regressor
 model = LinearRegression()
 model.fit(X, y)
 
@@ -31,10 +30,9 @@ feature_names = [
     "Global contrib",
     "Win in 1",
     "Opponent win in 1",
-    "Available boards",
     "Filled ratio",
     "2-in-a-line",
-    "Opp 2-in-a-line"
+    "Freedom move"
 ]
 
 print("Linear Regression Weights:")

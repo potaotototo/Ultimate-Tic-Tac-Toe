@@ -2,7 +2,7 @@ import numpy as np
 
 class FeatureExtractor:
     def extract_features(self, state):
-        num_features = 6
+        num_features = 7
 
         if state.is_terminal():
             return np.zeros(num_features)
@@ -78,13 +78,22 @@ class FeatureExtractor:
             if cells.count(my_fill) == 2 and cells.count(0) == 1:
                 control_2_in_line += 1
 
+        # Feature 14: Freedom of next move
+        freedom = 0.0
+        if state.prev_local_action is not None:
+            i, j = state.prev_local_action
+            if state.local_board_status[i][j] != 0:
+                freedom = 1.0
+
+
         features = np.array([
             my_won - opp_won,
             global_contrib,
             win_in_one,
             opp_win_in_one,
             control_2_in_line,
-            filled_ratio
+            filled_ratio,
+            freedom
         ])
 
         return features

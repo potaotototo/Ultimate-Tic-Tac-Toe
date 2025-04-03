@@ -39,10 +39,9 @@ feature_names = [
     "Global contrib",
     "Win in 1",
     "Opponent win in 1",
-    "Available boards",
     "Filled ratio",
     "2-in-a-line",
-    "Opp 2-in-a-line"
+    "Freedom move"
 ]
 
 print(f"Ridge MAE: {ridge_mae:.4f}, MSE: {ridge_mse:.4f}")
