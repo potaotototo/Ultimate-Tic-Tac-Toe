@@ -97,5 +97,5 @@ def test_agents(agent, opponent, num_tests):
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
 agent = SeventhAgent()  
-opponent = SixthAgent()  
+opponent = FourthAgent()  
 test_agents(agent, opponent, 10)

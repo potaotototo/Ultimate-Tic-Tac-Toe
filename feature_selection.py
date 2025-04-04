@@ -100,12 +100,12 @@ class ExtendedFeatureExtractor:
         boards_ahead = np.sum(lbs == my_fill) / 9  
 
         restricted_freedom = 0.0
-        total_available_moves = 9  # Total number of boards
+        total_available_moves = 9  
 
         opponent_valid_moves = 0
         for i in range(3):
             for j in range(3):
-                if lbs[i][j] == 0:  # Empty spot, i.e., opponent can play
+                if lbs[i][j] == 0:  
                     opponent_valid_moves += 1
 
         restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
