@@ -182,17 +182,15 @@ class TestEval:
         predictions = np.array(predictions)
         true_values = np.array(true_values)
 
-        # Calculate and print Mean Absolute Error (MAE)
         mae = np.mean(np.abs(predictions - true_values))
         print(f"Mean Absolute Error (no normalization): {mae:.4f}")
 
-        # Scatter plot of true vs predicted values
         plt.figure(figsize=(8, 6))
         plt.scatter(true_values, predictions, alpha=0.1, s=5)
         plt.xlabel("True Utility (scaled to [-1, 1])")
         plt.ylabel("Predicted Heuristic (linear model)")
         plt.title(f"Hardcoded Heuristic vs True Utility")
-        plt.plot([-1, 1], [-1, 1], 'r--')  # Identity line
+        plt.plot([-1, 1], [-1, 1], 'r--')  # identity line
         plt.grid(True)
         plt.show()
 

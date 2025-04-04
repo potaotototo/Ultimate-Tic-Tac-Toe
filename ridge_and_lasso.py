@@ -2,11 +2,12 @@ from sklearn.linear_model import Ridge, Lasso
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from utils import load_data
 from feature_extractor import FeatureExtractor
+from feature_extractor_rf import RFFeatureExtractor
 import numpy as np
 
 # Load and prepare data
 data = load_data()
-extractor = FeatureExtractor()
+extractor = RFFeatureExtractor()
 X, y = [], []
 
 for state, utility in data:
@@ -36,14 +37,13 @@ lasso_mse = mean_squared_error(y, lasso_pred)
 feature_names = [
     "Board win diff",
     "Central board"
-    "Valid actions",
     "Global contrib",
     "Win in 1",
-    "Opponent win in 1",
     "Filled ratio",
-    "Freedom move",
-    "Blocking",
-    "Player turn"
+    "Player turn",
+    "Two in a line",
+    "Opponent two in a line",
+    "Restricted and blocked"
 ]
 
 print(f"Ridge MAE: {ridge_mae:.4f}, MSE: {ridge_mse:.4f}")
