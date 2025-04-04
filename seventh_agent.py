@@ -2,8 +2,8 @@ import numpy as np
 from utils import State, Action
 from student_agent import StudentAgentWithCache
 
-# This agent introduced different features, improved losses from the previous generation
-class FifthAgent(StudentAgentWithCache):
+# This agent uses ridge regression, with features obtained from random forest
+class SeventhAgent(StudentAgentWithCache):
     def __init__(self):
         super().__init__()
 
@@ -16,18 +16,15 @@ class FifthAgent(StudentAgentWithCache):
         my_fill = 1
         opp_fill = 2
 
-        # Feature 1: Local boards won
         my_won = np.sum(lbs == my_fill)
         opp_won = np.sum(lbs == opp_fill)
 
-        # Feature 2: Centre priority (revived)
         center_control = 0
-        if board[1][1][1, 1] == my_fill:  
+        if board[1][1][1, 1] == my_fill:
             center_control = 1
-        elif board[1][1][1, 1] == opp_fill:  
+        elif board[1][1][1, 1] == opp_fill:
             center_control = -1
 
-        # Feature 8: Global win contribution (weighted board control)
         global_weights = np.array([
             [2, 1, 2],
             [1, 3, 1],
@@ -35,11 +32,8 @@ class FifthAgent(StudentAgentWithCache):
         ])
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
-        # Feature 9: Can win a local board in one move
-        # Feature 10: Opponent can win a local board in one move
         win_in_one = 0
         opp_win_in_one = 0
-
         for i in range(3):
             for j in range(3):
                 if lbs[i][j] != 0:
@@ -49,57 +43,89 @@ class FifthAgent(StudentAgentWithCache):
                     win_in_one += 1
                 if self.has_local_win_in_one(local, opp_fill):
                     opp_win_in_one += 1
-
         win_in_one /= 9
         opp_win_in_one /= 9
 
-        # Feature 13: Number of filled cells
         filled_ratio = np.sum(state.board != 0) / 81 / 9
 
-        # Feature 14: Freedom of next move
-        freedom = 0.0
-        if state.prev_local_action is not None:
-            i, j = state.prev_local_action
-            if state.local_board_status[i][j] != 0:
-                freedom = 1.0
-
-        # Feature 15: Track if the opponent is about to win local board
         blocking_opportunities = 0
         for i in range(3):
             for j in range(3):
-                if lbs[i][j] == 0:  # Empty spot
+                if lbs[i][j] == 0:  
                     local_board = board[i][j]
                     if self.has_local_win_in_one(local_board, opp_fill):
                         blocking_opportunities += 1
         blocking_opportunities /= 9
 
-        # Feature 16: Prioritise player turn
         player_turn_advantage = 0.1 if state.fill_num % 2 == 0 else -0.1
 
-        weights = np.array([
-                +0.0800,
-                +0.0448,
-                +0.1067,
-                +1.1254,
-                -0.5692,
-                +0.0229,
-                +0.0000,
-                -0.5692,
-                -1.5228
-            ])
-        intercept = -0.0004
+        two_in_line = 0
+        for line in [
+            [(0, 0), (0, 1), (0, 2)],
+            [(1, 0), (1, 1), (1, 2)],
+            [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)],
+            [(0, 1), (1, 1), (2, 1)],
+            [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)],
+            [(0, 2), (1, 1), (2, 0)]
+        ]:
+            cells = [lbs[i][j] for i, j in line]
+            if cells.count(my_fill) == 2 and cells.count(0) == 1:
+                two_in_line += 1
+
+        opponent_two_in_line = 0
+        for line in [
+            [(0, 0), (0, 1), (0, 2)],
+            [(1, 0), (1, 1), (1, 2)],
+            [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)],
+            [(0, 1), (1, 1), (2, 1)],
+            [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)],
+            [(0, 2), (1, 1), (2, 0)]
+        ]:
+            cells = [lbs[i][j] for i, j in line]
+            if cells.count(opp_fill) == 2 and cells.count(0) == 1:
+                opponent_two_in_line += 1
+
+        restricted_freedom = 0.0
+        total_available_moves = 9  
+
+        opponent_valid_moves = 0
+        for i in range(3):
+            for j in range(3):
+                if lbs[i][j] == 0:  
+                    opponent_valid_moves += 1
+
+        restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
+
+        restricted_and_blocked = restricted_freedom + blocking_opportunities
 
         features = np.array([
-            my_won - opp_won,
-            center_control,
-            global_contrib,
-            win_in_one,
-            opp_win_in_one,
-            filled_ratio,
-            freedom,
-            blocking_opportunities,
-            player_turn_advantage
+            my_won - opp_won, 
+            center_control, 
+            global_contrib, 
+            win_in_one, 
+            filled_ratio, 
+            player_turn_advantage, 
+            two_in_line, 
+            opponent_two_in_line, 
+            restricted_and_blocked
         ])
+
+        weights = np.array([
+                +0.0369,
+                +0.0407,
+                +0.0725,
+                +0.7170,
+                +0.0000,
+                -1.7778,
+                +0.2682,
+                -0.0822,
+                -0.4630
+            ])
+        intercept = -0.0134
 
         return float(np.dot(weights, features) + intercept)
 

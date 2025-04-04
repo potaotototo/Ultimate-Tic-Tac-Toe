@@ -36,7 +36,7 @@ lasso_mse = mean_squared_error(y, lasso_pred)
 
 feature_names = [
     "Board win diff",
-    "Central board"
+    "Central board",
     "Global contrib",
     "Win in 1",
     "Filled ratio",
