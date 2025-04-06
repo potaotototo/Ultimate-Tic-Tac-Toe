@@ -5,27 +5,24 @@ from abc import ABC, abstractmethod
 
 class StudentAgentWithCache(ABC):
     def __init__(self):
-        self.hashboard_by_depth = {}
+        self.global_cache = {}
         self.last_action_scores = {}
 
     def choose_action(self, state: State) -> Action:
+        self.global_cache.clear()  # clear cache for fresh search
         start_time = time.time()
         time_limit = 2.9
         best_action = state.get_random_valid_action()
 
         depth = 1
-        while True:
-            if time.time() - start_time > time_limit:
-                break
-
+        while time.time() - start_time < time_limit:
             try:
                 action = self.search_with_depth(state, depth, start_time, time_limit)
                 if action is not None:
                     best_action = action
+                depth += 1
             except TimeoutError:
                 break
-
-            depth += 1
 
         return best_action
 
@@ -45,7 +42,7 @@ class StudentAgentWithCache(ABC):
                 raise TimeoutError
 
             new_state = state.change_state(action)
-            value = self.minimax(new_state, depth - 1, alpha, beta, False, start_time, time_limit, depth)
+            value = self.minimax(new_state, depth - 1, alpha, beta, False, start_time, time_limit)
             current_scores[action] = value
 
             if value > best_value:
@@ -56,45 +53,40 @@ class StudentAgentWithCache(ABC):
         self.last_action_scores[depth] = current_scores
         return best_action
 
-    def minimax(self, state, depth, alpha, beta, maximizing, start_time, time_limit, root_depth):
+    def minimax(self, state, depth, alpha, beta, maximizing, start_time, time_limit):
         if time.time() - start_time > time_limit:
             raise TimeoutError
 
         key = self.canonical_hash(state)
-        if root_depth not in self.hashboard_by_depth:
-            self.hashboard_by_depth[root_depth] = {}
-        if key in self.hashboard_by_depth[root_depth]:
-            return self.hashboard_by_depth[root_depth][key]
+        if key in self.global_cache:
+            return self.global_cache[key]
 
         if state.is_terminal() or depth == 0:
             score = self.evaluate(state)
-            self.hashboard_by_depth[root_depth][key] = score
+            self.global_cache[key] = score
             return score
 
         valid_actions = state.get_all_valid_actions()
+        best_value = -np.inf if maximizing else np.inf
 
-        if maximizing:
-            max_eval = -np.inf
-            for action in valid_actions:
-                new_state = state.change_state(action)
-                eval_value = self.minimax(new_state, depth - 1, alpha, beta, False, start_time, time_limit, root_depth)
-                max_eval = max(max_eval, eval_value)
+        for action in valid_actions:
+            new_state = state.change_state(action)
+            eval_value = self.minimax(
+                new_state, depth - 1, alpha, beta, not maximizing, start_time, time_limit
+            )
+
+            if maximizing:
+                best_value = max(best_value, eval_value)
                 alpha = max(alpha, eval_value)
-                if beta <= alpha:
-                    break
-            self.hashboard_by_depth[root_depth][key] = max_eval
-            return max_eval
-        else:
-            min_eval = np.inf
-            for action in valid_actions:
-                new_state = state.change_state(action)
-                eval_value = self.minimax(new_state, depth - 1, alpha, beta, True, start_time, time_limit, root_depth)
-                min_eval = min(min_eval, eval_value)
+            else:
+                best_value = min(best_value, eval_value)
                 beta = min(beta, eval_value)
-                if beta <= alpha:
-                    break
-            self.hashboard_by_depth[root_depth][key] = min_eval
-            return min_eval
+
+            if beta <= alpha:
+                break
+
+        self.global_cache[key] = best_value
+        return best_value
 
     @abstractmethod
     def evaluate(self, state):
@@ -115,34 +107,24 @@ class StudentAgentWithCache(ABC):
         i, j = action
         return (j, 2 - i)
 
-    def hash_state(self, state):
-        board = state.board
-        action = state.prev_local_action
-        fill_num = state.fill_num
-
-        hashes = []
-        for _ in range(4):
-            h = hash((board.tobytes(), action, fill_num))
-            hashes.append(h)
-            board = self.rotate_board_90(board)
-            action = self.rotate_local_action_90(action)
-
-        return min(hashes)
-
     def canonical_hash(self, state):
-        board = state.board.copy()
+        board = state.board
         action = state.prev_local_action
         fill = state.fill_num
 
         hashes = []
         for k in range(4):
-            rotated_board = np.rot90(board, k, axes=(0, 1))
-            rotated_board = np.array([[np.rot90(rotated_board[i, j], k) for j in range(3)] for i in range(3)])
+            rotated_outer = np.rot90(board, k, axes=(0, 1))
             rotated_action = action
             for _ in range(k):
                 rotated_action = self.rotate_local_action_90(rotated_action)
+
+            rotated_board = np.empty((3, 3), dtype=object)
+            for i in range(3):
+                for j in range(3):
+                    rotated_board[i, j] = np.rot90(rotated_outer[i, j], k)
+
             h = hash((rotated_board.tobytes(), rotated_action, fill))
             hashes.append(h)
 
         return min(hashes)
-    
