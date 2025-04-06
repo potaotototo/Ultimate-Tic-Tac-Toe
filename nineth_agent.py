@@ -2,8 +2,8 @@ import numpy as np
 from utils import State, Action
 from student_agent import StudentAgentWithCache
 
-# EighthAgent: Seventh agent with dynamic weight updates (100% win rate against Seventh)
-class EighthAgent(StudentAgentWithCache):
+# NinethAgent: Eighth agent with freedom priority (manual) (100% win rate against Eighth)
+class NinethAgent(StudentAgentWithCache):
     def __init__(self):
         super().__init__()
 
@@ -89,11 +89,16 @@ class EighthAgent(StudentAgentWithCache):
             if cells.count(opp_fill) == 2 and cells.count(0) == 1:
                 opponent_two_in_line += 1
 
-        restricted_freedom = 0.0
         total_available_moves = 9  
         opponent_valid_moves = sum(lbs[i][j] == 0 for i in range(3) for j in range(3))
         restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
         restricted_and_blocked = restricted_freedom + blocking_opportunities
+
+        freedom = 0.0
+        if state.prev_local_action is not None:
+            i, j = state.prev_local_action
+            if state.local_board_status[i][j] != 0:
+                freedom = 1.0
 
         features = np.array([
             my_won - opp_won, 
@@ -104,7 +109,8 @@ class EighthAgent(StudentAgentWithCache):
             player_turn_advantage, 
             two_in_line, 
             opponent_two_in_line, 
-            restricted_and_blocked
+            restricted_and_blocked,
+            freedom
         ])
 
         weights = np.array([
@@ -116,7 +122,8 @@ class EighthAgent(StudentAgentWithCache):
             -1.7778,
             +0.2682,
             -0.0822,
-            -0.4630
+            -0.4630,
+            +0.3000
         ])
         intercept = -0.0134
 
