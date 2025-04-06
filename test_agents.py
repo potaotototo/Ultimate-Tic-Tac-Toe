@@ -8,6 +8,7 @@ from seventh_agent import SeventhAgent
 from eighth_agent import EighthAgent
 from nineth_agent import NinethAgent
 from tenth_agent import TenthAgent
+from eleventh_agent import EleventhAgent
 
 def run(your_agent, opponent_agent, start_num: int):
     your_agent_stats = {"timeout_count": 0, "invalid_count": 0}
@@ -99,6 +100,6 @@ def test_agents(agent, opponent, num_tests):
     print(f"Losses: {losses} ({loss_rate * 100:.2f}%)")
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
-agent = TenthAgent()  
-opponent = NinethAgent()  
+agent = EleventhAgent()  
+opponent = TenthAgent()  
 test_agents(agent, opponent, 10)
