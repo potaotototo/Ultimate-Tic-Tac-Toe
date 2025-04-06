@@ -2,8 +2,36 @@ import numpy as np
 from utils import State, Action
 from killer_agent import KillerAgent
 
-# Twelve: Eleventh with new caching
-class TwelveAgent(KillerAgent):
+def generate_win_in_one_table():
+        table = {}
+        all_cells = [0, 1, 2]
+        from itertools import product
+
+        for config in product(all_cells, repeat=9):
+            board = np.array(config).reshape(3, 3)
+            for fill in [1, 2]:
+                count = 0
+                for i in range(3):
+                    row = board[i, :]
+                    col = board[:, i]
+                    if np.count_nonzero(row == fill) == 2 and np.count_nonzero(row == 0) == 1:
+                        count += 1
+                    if np.count_nonzero(col == fill) == 2 and np.count_nonzero(col == 0) == 1:
+                        count += 1
+                diag1 = [board[i, i] for i in range(3)]
+                diag2 = [board[i, 2 - i] for i in range(3)]
+                if diag1.count(fill) == 2 and diag1.count(0) == 1:
+                    count += 1
+                if diag2.count(fill) == 2 and diag2.count(0) == 1:
+                    count += 1
+
+                table[(tuple(config), fill)] = count > 0
+        return table
+
+WIN_IN_ONE_LOOKUP = generate_win_in_one_table()
+
+# Thirteenth: Twelve with new computation
+class ThirteenthAgent(KillerAgent):
     def __init__(self):
         super().__init__()
 
@@ -111,17 +139,4 @@ class TwelveAgent(KillerAgent):
             return float(np.dot(ridge_weights, features) + ridge_intercept)
 
     def has_local_win_in_one(self, sub_board, fill):
-        for i in range(3):
-            row = sub_board[i, :]
-            col = sub_board[:, i]
-            if np.count_nonzero(row == fill) == 2 and np.count_nonzero(row == 0) == 1:
-                return True
-            if np.count_nonzero(col == fill) == 2 and np.count_nonzero(col == 0) == 1:
-                return True
-        diag1 = [sub_board[i, i] for i in range(3)]
-        diag2 = [sub_board[i, 2 - i] for i in range(3)]
-        if diag1.count(fill) == 2 and diag1.count(0) == 1:
-            return True
-        if diag2.count(fill) == 2 and diag2.count(0) == 1:
-            return True
-        return False
+        return WIN_IN_ONE_LOOKUP[(tuple(sub_board.flatten()), fill)]
