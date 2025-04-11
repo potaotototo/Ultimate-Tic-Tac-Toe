@@ -13,6 +13,7 @@ from twelve_agent import TwelveAgent
 from thirteenth_agent import ThirteenthAgent
 from fourteenth_agent import FourteenthAgent
 from fifthteenth_agent import FifthteenthAgent
+from sixteenth_agent import SixteenthAgent
 
 
 def adjust_state_for_agent(agent, state, agent_is_player1):
@@ -114,6 +115,6 @@ def test_agents(agent, opponent, num_tests):
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
 player1 = FourthAgent()  
-player2 = FifthteenthAgent()  
+player2 = SixteenthAgent()  
 test_agents(player1, player2, 2)
 test_agents(player2, player1, 2)
