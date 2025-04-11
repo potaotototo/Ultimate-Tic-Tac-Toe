@@ -14,9 +14,6 @@ class KillerAgent(ABC):
         time_limit = 2.9
         best_action = state.get_random_valid_action()
 
-        self.my_fill = state.fill_num
-        self.opp_fill = 3 - self.my_fill
-
         depth = 2  # start searching further
         while True:
             if time.time() - start_time > time_limit:

@@ -13,7 +13,13 @@ from twelve_agent import TwelveAgent
 from thirteenth_agent import ThirteenthAgent
 from fourteenth_agent import FourteenthAgent
 from fifthteenth_agent import FifthteenthAgent
-from sixteenth_agent import SixteenthAgent
+
+
+def adjust_state_for_agent(agent, state, agent_is_player1):
+    """Invert the state if agent is not Player 1 but assumes it is."""
+    if not agent_is_player1:
+        return state.invert()
+    return state
 
 def run(your_agent, opponent_agent, start_num: int):
     your_agent_stats = {"timeout_count": 0, "invalid_count": 0}
@@ -25,12 +31,14 @@ def run(your_agent, opponent_agent, start_num: int):
     while not state.is_terminal():
         turn_count += 1
 
-        agent_name = "your_agent" if state.fill_num == 1 else "opponent_agent"
-        agent = your_agent if state.fill_num == 1 else opponent_agent
-        stats = your_agent_stats if state.fill_num == 1 else opponent_agent_stats
+        agent_is_player1 = state.fill_num == 1
+        agent = your_agent if agent_is_player1 else opponent_agent
+        stats = your_agent_stats if agent_is_player1 else opponent_agent_stats
+
+        adjusted_state = adjust_state_for_agent(agent, state.clone(), agent_is_player1)
 
         start_time = time.time()
-        action = agent.choose_action(state.clone())
+        action = agent.choose_action(adjusted_state)
         end_time = time.time()
         
         random_action = state.get_random_valid_action()
@@ -105,6 +113,7 @@ def test_agents(agent, opponent, num_tests):
     print(f"Losses: {losses} ({loss_rate * 100:.2f}%)")
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
-agent = FifthteenthAgent()  
-opponent = FifthteenthAgent()  
-test_agents(agent, opponent, 5)
+player1 = FourthAgent()  
+player2 = FifthteenthAgent()  
+test_agents(player1, player2, 2)
+test_agents(player2, player1, 2)

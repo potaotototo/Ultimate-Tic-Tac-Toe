@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import Ridge, Lasso, LinearRegression
 from sklearn.metrics import mean_squared_error
@@ -49,3 +50,38 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+ridge_weights = ridge.coef_
+lasso_weights = lasso.coef_
+linear_weights = linear.coef_
+ridge_intercept = ridge.intercept_
+lasso_intercept = lasso.intercept_
+linear_intercept = linear.intercept_
+
+feature_names = [
+    "Board win diff", "Center control", "Global contribution", "Win in one",
+    "Opponent win in one", "Filled ratio", "Freedom", "Blocking opportunities",
+    "Player turn advantage", "Two in a line", "Opponent two in a line",
+    "Restricted and blocked", "Meta two in a line", "Meta opponent two in a line"
+]
+
+results = pd.DataFrame({
+    "Feature": feature_names,
+    "Ridge": ridge.coef_,
+    "Lasso": lasso.coef_,
+    "Linear": linear.coef_,
+})
+
+intercepts = {
+    "Ridge_Intercept": ridge.intercept_,
+    "Lasso_Intercept": lasso.intercept_,
+    "Linear_Intercept": linear.intercept_,
+}
+
+# Save to CSV
+results.to_csv("data/model_weights.csv", index=False)
+with open("data/model_intercepts.txt", "w") as f:
+    for name, val in intercepts.items():
+        f.write(f"{name}: {val:.6f}\n")
+
+results.head()
