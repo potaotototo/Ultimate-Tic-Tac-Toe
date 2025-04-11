@@ -31,7 +31,7 @@ def generate_win_in_one_table():
 WIN_IN_ONE_LOOKUP = generate_win_in_one_table()
 
 # Modified based on the FourthAgent with addition of freedom as a feature
-class SixteenthAgent(KillerAgent):
+class SeventeenthAgent(KillerAgent):
     def __init__(self):
         super().__init__()
 
@@ -48,7 +48,13 @@ class SixteenthAgent(KillerAgent):
         opp_won = np.sum(lbs == opp_fill)
         board_win_diff = my_won - opp_won
 
-        global_weights = np.array([[2, 1, 2], [1, 3, 1], [2, 1, 2]])
+        central_pressure = int(lbs[1, 1] == opp_fill)
+        if central_pressure:
+            global_weights = np.array([[3, 2, 3], [2, 1, 2], [3, 2, 3]])
+        else:
+            global_weights = np.array([[2, 1, 2], [1, 3, 1], [2, 1, 2]])
+
+        global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
         win_in_one = 0
