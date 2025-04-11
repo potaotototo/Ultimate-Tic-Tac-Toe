@@ -26,14 +26,14 @@ intercept = model.intercept_
 # Feature names
 feature_names = [
     "Board win diff",
-    "Central control"
+    "Central control",
     "Global contrib",
     "Win in 1",
     "Filled ratio",
     "Player turn advantage",
     "Two in a line",
     "Opponent two in a line",
-    "Meta opp two in a line"
+    "Meta opp two in a line",
     "Risky ratio"
 ]
 

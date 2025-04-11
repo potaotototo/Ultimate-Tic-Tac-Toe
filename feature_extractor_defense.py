@@ -111,9 +111,6 @@ class DefensiveFeatureExtractor:
             if cells.count(opp_fill) == 2 and cells.count(0) == 1:
                 opponent_two_in_line += 1
 
-        restricted_freedom = 0.0
-        total_available_moves = 9  
-
         opponent_valid_moves = 0
         for i in range(3):
             for j in range(3):

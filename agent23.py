@@ -278,7 +278,6 @@ class Agent23:
         ])
         intercept = -0.0134
 
-        # --- Dynamic tuning ---
         if filled_ratio < 0.10:
             weights[2] *= 2.0  # global_contrib
         elif filled_ratio < 0.40:

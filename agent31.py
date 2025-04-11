@@ -30,8 +30,8 @@ def generate_win_in_one_table():
 
 WIN_IN_ONE_LOOKUP = generate_win_in_one_table()
 
-# Agent23 with time limit 2.95 => identical to Agent23
-class Agent24:
+# Improved on second generation with new defensive features
+class Agent31:
     def __init__(self):
         self.global_cache = {}
         self.killer_moves = {}  # store killer moves by depth
@@ -178,11 +178,10 @@ class Agent24:
         if state.is_terminal():
             return state.terminal_utility()
 
-        my_fill = 1
-        opp_fill = 2
-
         lbs = state.local_board_status
         board = state.board
+        my_fill = 1
+        opp_fill = 2
 
         my_won = np.sum(lbs == my_fill)
         opp_won = np.sum(lbs == opp_fill)
@@ -193,12 +192,11 @@ class Agent24:
         elif board[1][1][1, 1] == opp_fill:
             center_control = -1
 
-        central_pressure = int(lbs[1, 1] == opp_fill)
-        if central_pressure:
-            global_weights = np.array([[3, 2, 3], [2, 1, 2], [3, 2, 3]])
-        else:
-            global_weights = np.array([[2, 1, 2], [1, 3, 1], [2, 1, 2]])
-
+        global_weights = np.array([
+            [2, 1, 2],
+            [1, 3, 1],
+            [2, 1, 2]
+        ])
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
         win_in_one = 0
@@ -220,7 +218,7 @@ class Agent24:
         blocking_opportunities = 0
         for i in range(3):
             for j in range(3):
-                if lbs[i][j] == 0:
+                if lbs[i][j] == 0:  
                     local_board = board[i][j]
                     if self.has_local_win_in_one(local_board, opp_fill):
                         blocking_opportunities += 1
@@ -229,8 +227,7 @@ class Agent24:
         player_turn_advantage = 0.1 if state.fill_num % 2 == 0 else -0.1
 
         two_in_line = 0
-        opponent_two_in_line = 0
-        win_lines = [
+        for line in [
             [(0, 0), (0, 1), (0, 2)],
             [(1, 0), (1, 1), (1, 2)],
             [(2, 0), (2, 1), (2, 2)],
@@ -239,44 +236,72 @@ class Agent24:
             [(0, 2), (1, 2), (2, 2)],
             [(0, 0), (1, 1), (2, 2)],
             [(0, 2), (1, 1), (2, 0)]
-        ]
-        for line in win_lines:
+        ]:
             cells = [lbs[i][j] for i, j in line]
             if cells.count(my_fill) == 2 and cells.count(0) == 1:
                 two_in_line += 1
+
+        opponent_two_in_line = 0
+        for line in [
+            [(0, 0), (0, 1), (0, 2)],
+            [(1, 0), (1, 1), (1, 2)],
+            [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)],
+            [(0, 1), (1, 1), (2, 1)],
+            [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)],
+            [(0, 2), (1, 1), (2, 0)]
+        ]:
+            cells = [lbs[i][j] for i, j in line]
             if cells.count(opp_fill) == 2 and cells.count(0) == 1:
                 opponent_two_in_line += 1
 
-        total_available_moves = 9
-        opponent_valid_moves = sum(lbs[i][j] == 0 for i in range(3) for j in range(3))
-        restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
-        restricted_and_blocked = restricted_freedom + blocking_opportunities
+        opponent_valid_moves = 0
+        for i in range(3):
+            for j in range(3):
+                if lbs[i][j] == 0:  
+                    opponent_valid_moves += 1
+
+        meta_opp_two_in_line = 0
+        for line in [
+            [(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)], [(0, 1), (1, 1), (2, 1)], [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)], [(0, 2), (1, 1), (2, 0)],
+        ]:
+            cells = [lbs[i][j] for i, j in line]
+            if cells.count(opp_fill) == 2 and cells.count(0) == 1:
+                meta_opp_two_in_line += 1
+
+        opp_win_potential = opp_win_in_one * 9
+        total_free_boards = np.sum(lbs == 0)
+        risky_ratio = (opp_win_potential / total_free_boards) if total_free_boards else 0.0
 
         features = np.array([
-            my_won - opp_won,
-            center_control,
-            global_contrib,
-            win_in_one,
-            filled_ratio,
-            player_turn_advantage,
-            two_in_line,
-            opponent_two_in_line,
-            restricted_and_blocked
+            my_won - opp_won, 
+            center_control, 
+            global_contrib, 
+            win_in_one, 
+            filled_ratio, 
+            player_turn_advantage, 
+            two_in_line, 
+            opponent_two_in_line, 
+            meta_opp_two_in_line,
+            risky_ratio
         ])
 
         weights = np.array([
-            +0.0369,
-            +0.0407,
-            +0.0725,
-            +0.7170,
-            +0.0000,
-            -1.7778,
-            +0.2682,
-            -0.0822,
-            -0.4630
+            +0.0445,
+            +0.0399,
+            +0.0770,
+            +0.6972,
+            +3.4749,
+            -1.9113,
+            +0.2444,
+            -0.0620,
+            -0.0620
         ])
-        intercept = -0.0134
-        
+        intercept = -0.0682
+
         if filled_ratio < 0.10:
             weights[2] *= 2.0  # global_contrib
         elif filled_ratio < 0.40:
@@ -286,11 +311,6 @@ class Agent24:
             weights[3] *= 2.5
             weights[8] *= 2.5
             weights[7] *= 1.5  # opponent_two_in_line
-
-        # If losing, prioritize defense
-        # if my_won < opp_won:
-        #     weights[3] *= 0.8
-        #     weights[7] *= 2.5
 
         return float(np.dot(weights, features) + intercept)
 

@@ -19,6 +19,7 @@ from agent21 import Agent21
 from agent22 import Agent22
 from agent23 import Agent23
 from agent24 import Agent24
+from agent31 import Agent31
 
 def adjust_state_for_agent(agent, state, agent_is_player1):
     """Invert the state if agent is not Player 1 but assumes it is."""
@@ -118,7 +119,7 @@ def test_agents(agent, opponent, num_tests):
     print(f"Losses: {losses} ({loss_rate * 100:.2f}%)")
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
-player1 = Agent24()  
+player1 = Agent31()  
 player2 = Agent23()  
 test_agents(player1, player2, 5)
 test_agents(player2, player1, 5)
