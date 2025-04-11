@@ -4,8 +4,8 @@ class MoreMetaFeatureExtractor:
     def extract_features(self, state):
         lbs = state.local_board_status
         board = state.board
-        my_fill = 1
-        opp_fill = 2
+        my_fill = state.fill_num
+        opp_fill = 3 - my_fill
 
         # 1) Basic local boards won
         my_won = np.sum(lbs == my_fill)

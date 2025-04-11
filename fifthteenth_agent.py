@@ -40,8 +40,8 @@ class FifthteenthAgent(KillerAgent):
 
         lbs = state.local_board_status
         board = state.board
-        my_fill = 1
-        opp_fill = 2
+        my_fill = self.my_fill
+        opp_fill = self.opp_fill
 
         my_won = np.sum(lbs == my_fill)
         opp_won = np.sum(lbs == opp_fill)

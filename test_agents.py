@@ -13,6 +13,7 @@ from twelve_agent import TwelveAgent
 from thirteenth_agent import ThirteenthAgent
 from fourteenth_agent import FourteenthAgent
 from fifthteenth_agent import FifthteenthAgent
+from sixteenth_agent import SixteenthAgent
 
 def run(your_agent, opponent_agent, start_num: int):
     your_agent_stats = {"timeout_count": 0, "invalid_count": 0}
@@ -47,17 +48,17 @@ def run(your_agent, opponent_agent, start_num: int):
     print(f"== {your_agent.__class__.__name__} (1) vs {opponent_agent.__class__.__name__} (2) - First Player: {start_num} ==")
 
     # To track game result    
-    win = 0
+    result = 0
 
     if state.terminal_utility() == 1:
         print("You win!")
-        win = 1
+        result = 1
     elif state.terminal_utility() == 0:
         print("You lose!")
-        win = 0
+        result = 0
     else:
         print("Draw")
-        win = 0.5
+        result = 0.5
 
     for agent_name, stats in [("your_agent", your_agent_stats), ("opponent_agent", opponent_agent_stats)]:
         print(f"{agent_name} statistics:")
@@ -65,7 +66,7 @@ def run(your_agent, opponent_agent, start_num: int):
         print(f"Invalid count: {stats['invalid_count']}")
         
     print(f"Turn count: {turn_count}\n")
-    return win
+    return result
 
 def test_agents(agent, opponent, num_tests):
 
@@ -105,5 +106,5 @@ def test_agents(agent, opponent, num_tests):
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
 agent = FifthteenthAgent()  
-opponent = FourthAgent()  
-test_agents(agent, opponent, 10)
+opponent = FifthteenthAgent()  
+test_agents(agent, opponent, 5)
