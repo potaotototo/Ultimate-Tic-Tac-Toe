@@ -1,11 +1,11 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from utils import load_data
-from feature_extractor import FeatureExtractor
+from feature_extractor_defense import DefensiveFeatureExtractor
 
 # Load data and extract features
 data = load_data()
-extractor = FeatureExtractor()
+extractor = DefensiveFeatureExtractor()
 
 X, y = [], []
 for state, utility in data:
@@ -26,15 +26,15 @@ intercept = model.intercept_
 # Feature names
 feature_names = [
     "Board win diff",
-    "Central board"
-    "Valid actions",
+    "Central control"
     "Global contrib",
     "Win in 1",
-    "Opponent win in 1",
     "Filled ratio",
-    "Freedom move",
-    "Blocking",
-    "Player turn"
+    "Player turn advantage",
+    "Two in a line",
+    "Opponent two in a line",
+    "Meta opp two in a line"
+    "Risky ratio"
 ]
 
 print("Linear Regression Weights:")

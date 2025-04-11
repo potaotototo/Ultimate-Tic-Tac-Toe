@@ -109,9 +109,21 @@ class ExtendedFeatureExtractor:
                     opponent_valid_moves += 1
 
         restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
-
         restricted_and_blocked = restricted_freedom + blocking_opportunities
 
+        meta_opp_two_in_line = 0
+        for line in [
+            [(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)], [(0, 1), (1, 1), (2, 1)], [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)], [(0, 2), (1, 1), (2, 0)],
+        ]:
+            cells = [lbs[i][j] for i, j in line]
+            if cells.count(opp_fill) == 2 and cells.count(0) == 1:
+                meta_opp_two_in_line += 1
+
+        opp_win_potential = opp_win_in_one * 9
+        total_free_boards = np.sum(lbs == 0)
+        risky_ratio = (opp_win_potential / total_free_boards) if total_free_boards else 0.0
 
         features = np.array([
             my_won - opp_won, 
@@ -129,7 +141,9 @@ class ExtendedFeatureExtractor:
             available_subboards, 
             boards_ahead,
             restricted_freedom,
-            restricted_and_blocked
+            restricted_and_blocked,
+            meta_opp_two_in_line,
+            risky_ratio
         ])
 
         return features
@@ -205,7 +219,7 @@ feature_names = [
     "Freedom of next move", "Blocking opportunities", "Safe opponent move", 
     "Player turn advantage", "Two in a line", "Opponent two in a line",
     "Available local boards", "Boards ahead", "Restricted opponent", 
-    "Restricted and blocked"
+    "Restricted and blocked", "Meta opp two in one", "Risky ratio"
 ]
 
 plt.figure(figsize=(14, 6))

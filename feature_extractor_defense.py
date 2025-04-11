@@ -1,7 +1,36 @@
 import numpy as np
 
-# Contains features that have importance > threshold from random forest
-class RFFeatureExtractor:
+def generate_win_in_one_table():
+        table = {}
+        all_cells = [0, 1, 2]
+        from itertools import product
+
+        for config in product(all_cells, repeat=9):
+            board = np.array(config).reshape(3, 3)
+            for fill in [1, 2]:
+                count = 0
+                for i in range(3):
+                    row = board[i, :]
+                    col = board[:, i]
+                    if np.count_nonzero(row == fill) == 2 and np.count_nonzero(row == 0) == 1:
+                        count += 1
+                    if np.count_nonzero(col == fill) == 2 and np.count_nonzero(col == 0) == 1:
+                        count += 1
+                diag1 = [board[i, i] for i in range(3)]
+                diag2 = [board[i, 2 - i] for i in range(3)]
+                if diag1.count(fill) == 2 and diag1.count(0) == 1:
+                    count += 1
+                if diag2.count(fill) == 2 and diag2.count(0) == 1:
+                    count += 1
+
+                table[(tuple(config), fill)] = count > 0
+        return table
+
+WIN_IN_ONE_LOOKUP = generate_win_in_one_table()
+
+# Features from feature_extractor_rf with new defensive features
+# Threshold importance 0.025
+class DefensiveFeatureExtractor:
     def extract_features(self, state):
         
         lbs = state.local_board_status
@@ -40,12 +69,6 @@ class RFFeatureExtractor:
         opp_win_in_one /= 9
 
         filled_ratio = np.sum(state.board != 0) / 81 / 9
-
-        freedom = 0.0
-        if state.prev_local_action is not None:
-            i, j = state.prev_local_action
-            if state.local_board_status[i][j] != 0:
-                freedom = 1.0
 
         blocking_opportunities = 0
         for i in range(3):
@@ -97,10 +120,19 @@ class RFFeatureExtractor:
                 if lbs[i][j] == 0:  
                     opponent_valid_moves += 1
 
-        restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
+        meta_opp_two_in_line = 0
+        for line in [
+            [(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)],
+            [(0, 0), (1, 0), (2, 0)], [(0, 1), (1, 1), (2, 1)], [(0, 2), (1, 2), (2, 2)],
+            [(0, 0), (1, 1), (2, 2)], [(0, 2), (1, 1), (2, 0)],
+        ]:
+            cells = [lbs[i][j] for i, j in line]
+            if cells.count(opp_fill) == 2 and cells.count(0) == 1:
+                meta_opp_two_in_line += 1
 
-        restricted_and_blocked = restricted_freedom + blocking_opportunities
-
+        opp_win_potential = opp_win_in_one * 9
+        total_free_boards = np.sum(lbs == 0)
+        risky_ratio = (opp_win_potential / total_free_boards) if total_free_boards else 0.0
 
         features = np.array([
             my_won - opp_won, 
@@ -111,23 +143,11 @@ class RFFeatureExtractor:
             player_turn_advantage, 
             two_in_line, 
             opponent_two_in_line, 
-            restricted_and_blocked
+            meta_opp_two_in_line,
+            risky_ratio
         ])
-
+        
         return features
 
     def has_local_win_in_one(self, sub_board, fill):
-        for i in range(3):
-            row = sub_board[i, :]
-            col = sub_board[:, i]
-            if np.count_nonzero(row == fill) == 2 and np.count_nonzero(row == 0) == 1:
-                return True
-            if np.count_nonzero(col == fill) == 2 and np.count_nonzero(col == 0) == 1:
-                return True
-        diag1 = [sub_board[i, i] for i in range(3)]
-        diag2 = [sub_board[i, 2 - i] for i in range(3)]
-        if diag1.count(fill) == 2 and diag1.count(0) == 1:
-            return True
-        if diag2.count(fill) == 2 and diag2.count(0) == 1:
-            return True
-        return False
+        return WIN_IN_ONE_LOOKUP[(tuple(sub_board.flatten()), fill)]

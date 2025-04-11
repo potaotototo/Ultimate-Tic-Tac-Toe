@@ -62,6 +62,7 @@ class MoreMetaFeatureExtractor:
 
         # 5) Agent "two_in_line" in local boards
         two_in_line = 0
+        
         # 6) Opponent "two_in_line" in local boards
         opponent_two_in_line = 0
         local_win_lines = [
