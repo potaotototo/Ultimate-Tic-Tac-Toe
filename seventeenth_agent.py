@@ -55,7 +55,6 @@ class SeventeenthAgent(KillerAgent):
             global_weights = np.array([[2, 1, 2], [1, 3, 1], [2, 1, 2]])
 
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
-        global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
         win_in_one = 0
         opp_win_in_one = 0
