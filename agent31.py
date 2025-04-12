@@ -65,7 +65,7 @@ class Agent31:
         valid_actions = state.get_all_valid_actions()
         
         if len(valid_actions) == 81:            
-            return (1, 1, 1, 1) # always start from the centre
+            return (1, 1, 1, 1) # start from the centre
         
         # Move ordering: use killer moves + previous scores
         killer = self.killer_moves.get(depth, None)
@@ -298,7 +298,8 @@ class Agent31:
             -1.9113,
             +0.2444,
             -0.0620,
-            -0.0620
+            -0.0620,
+            -0.8024
         ])
         intercept = -0.0682
 

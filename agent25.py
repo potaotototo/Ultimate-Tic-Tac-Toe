@@ -30,8 +30,9 @@ def generate_win_in_one_table():
 
 WIN_IN_ONE_LOOKUP = generate_win_in_one_table()
 
-# Agent23 with time limit 2.95 => identical to Agent23
-class Agent24:
+# Agent22 with more offensive early-mid game
+# Targets D2
+class Agent25:
     def __init__(self):
         self.global_cache = {}
         self.killer_moves = {}  # store killer moves by depth
@@ -39,7 +40,7 @@ class Agent24:
 
     def choose_action(self, state: State) -> Action:
         start_time = time.time()
-        time_limit = 2.95
+        time_limit = 2.9
         best_action = state.get_random_valid_action()
 
         depth = 4  # start searching further
@@ -63,10 +64,7 @@ class Agent24:
         best_value = -np.inf
         alpha, beta = -np.inf, np.inf
         valid_actions = state.get_all_valid_actions()
-        
-        if len(valid_actions) == 81:            
-            return (1, 1, 1, 1) # start from the centre
-        
+
         # Move ordering: use killer moves + previous scores
         killer = self.killer_moves.get(depth, None)
         prev_scores = self.last_action_scores.get(depth - 1, {})
@@ -193,12 +191,11 @@ class Agent24:
         elif board[1][1][1, 1] == opp_fill:
             center_control = -1
 
-        central_pressure = int(lbs[1, 1] == opp_fill)
-        if central_pressure:
-            global_weights = np.array([[3, 2, 3], [2, 1, 2], [3, 2, 3]])
-        else:
-            global_weights = np.array([[2, 1, 2], [1, 3, 1], [2, 1, 2]])
-
+        global_weights = np.array([
+            [2, 1, 2],
+            [1, 3, 1],
+            [2, 1, 2]
+        ])
         global_contrib = np.sum(global_weights * (lbs == my_fill)) - np.sum(global_weights * (lbs == opp_fill))
 
         win_in_one = 0
@@ -271,26 +268,22 @@ class Agent24:
             +0.7170,
             +0.0000,
             -1.7778,
-            +0.2682,
+            +0.682, # typo but works
             -0.0822,
             -0.4630
         ])
         intercept = -0.0134
 
         if filled_ratio < 0.10:
-            weights[2] *= 2.0  # global_contrib
+            weights[2] *= 5.0  # global_contrib
         elif filled_ratio < 0.40:
-            weights[3] *= 1.8  # win_in_one
+            weights[3] *= 3.0  # win_in_one
+            weights[6] *= 3.0
             weights[8] *= 2.0  # blocked
         else:
             weights[3] *= 2.5
             weights[8] *= 2.5
             weights[7] *= 1.5  # opponent_two_in_line
-
-        # If losing, prioritize defense
-        # if my_won < opp_won:
-        #     weights[3] *= 0.8
-        #     weights[7] *= 2.5
 
         return float(np.dot(weights, features) + intercept)
 

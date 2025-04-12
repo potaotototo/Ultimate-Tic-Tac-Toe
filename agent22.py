@@ -248,7 +248,6 @@ class Agent22:
         restricted_freedom = 1 - (opponent_valid_moves / total_available_moves)
         restricted_and_blocked = restricted_freedom + blocking_opportunities
 
-        # --- Feature vector ---
         features = np.array([
             my_won - opp_won,
             center_control,

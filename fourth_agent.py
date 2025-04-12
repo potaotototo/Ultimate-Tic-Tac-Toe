@@ -64,7 +64,6 @@ class FourthAgent(StudentAgentWithCache):
         ])
         intercept = 0.0034
 
-        # === Dynamic Weights Based on Game Phase ===
         if filled_ratio < 0.10:
             weights[1] *= 2.0  # global_contrib: even more early priority
         elif filled_ratio < 0.40:

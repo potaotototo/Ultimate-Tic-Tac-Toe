@@ -1,6 +1,7 @@
 import time
 import numpy as np
 from utils import State, Action
+from third_agent import ThirdAgent
 from fourth_agent import FourthAgent  
 from fifth_agent import FifthAgent  
 from sixth_agent import SixthAgent
@@ -19,7 +20,13 @@ from agent21 import Agent21
 from agent22 import Agent22
 from agent23 import Agent23
 from agent24 import Agent24
+from agent25 import Agent25
+from agent26 import Agent26
+from agent27 import Agent27
 from agent31 import Agent31
+from agent41 import Agent41
+from agent42 import Agent42
+from agent43 import Agent43
 
 def adjust_state_for_agent(agent, state, agent_is_player1):
     """Invert the state if agent is not Player 1 but assumes it is."""
@@ -119,7 +126,7 @@ def test_agents(agent, opponent, num_tests):
     print(f"Losses: {losses} ({loss_rate * 100:.2f}%)")
     print(f"Draws: {draws} ({draw_rate * 100:.2f}%)")
 
-player1 = Agent31()  
-player2 = Agent23()  
+player1 = Agent42()  
+player2 = Agent43()  
 test_agents(player1, player2, 5)
-test_agents(player2, player1, 5)
+# test_agents(player2, player1, 5)
